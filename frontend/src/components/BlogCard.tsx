@@ -10,6 +10,7 @@ interface BlogCardProps {
         createdAt: string;
         author: { email: string };
         _count: { likes: number; comments: number };
+        isLikedByViewer?: boolean;
     };
 }
 
@@ -20,11 +21,11 @@ export function BlogCard({ blog }: BlogCardProps) {
     return (
         <article className="p-6 bg-white rounded-xl shadow-sm border border-slate-100 transition-all hover:shadow-md hover:border-slate-200">
             <Link href={`/blog/${blog.slug}`} className="block group">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-amber-600 transition-colors">
+                <h2 className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-amber-600 transition-colors overflow-hidden text-ellipsis whitespace-nowrap overflow-x-hidden w-full">
                     {blog.title}
                 </h2>
                 {blog.summary && (
-                    <p className="mt-3 text-slate-600 leading-relaxed line-clamp-2">
+                    <p className="mt-3 text-slate-600 leading-relaxed overflow-hidden text-ellipsis whitespace-nowrap overflow-x-hidden w-full">
                         {blog.summary}
                     </p>
                 )}
@@ -39,8 +40,8 @@ export function BlogCard({ blog }: BlogCardProps) {
 
                 <div className="flex items-center gap-4 text-slate-600">
                     <div className="flex items-center gap-1.5" title="Likes">
-                        <Heart className="w-4 h-4" />
-                        <span>{blog._count.likes}</span>
+                        <Heart className={`w-4 h-4 ${blog.isLikedByViewer ? 'fill-red-500 text-red-500' : ''}`} />
+                        <span className={blog.isLikedByViewer ? 'text-red-600 font-medium' : ''}>{blog._count.likes}</span>
                     </div>
                     <div className="flex items-center gap-1.5" title="Comments">
                         <MessageCircle className="w-4 h-4" />

@@ -6,7 +6,7 @@ import { Navbar } from '@/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Secure Blog Platform',
+  title: 'BlogX',
   description: 'Production-ready blog platform built with Next.js and NestJS',
 };
 

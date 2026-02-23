@@ -77,10 +77,13 @@ export default function DashboardPage() {
                 <div className="grid gap-4">
                     {blogs.map((blog) => (
                         <div key={blog.id} className="p-5 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:shadow-md">
-                            <div className="flex-1">
-                                <Link href={`/blog/${blog.slug}`} className="hover:underline">
-                                    <h3 className="text-lg font-semibold text-slate-900">{blog.title}</h3>
+                            <div className="flex-1 min-w-0 grid">
+                                <Link href={blog.isPublished ? `/blog/${blog.slug}` : `/dashboard/edit/${blog.id}`} className="hover:underline overflow-hidden">
+                                    <h3 className="text-lg font-semibold text-slate-900 overflow-hidden text-ellipsis whitespace-nowrap w-full">{blog.title}</h3>
                                 </Link>
+                                {blog.summary && (
+                                    <p className="mt-2 text-slate-600 overflow-hidden text-ellipsis whitespace-nowrap w-full">{blog.summary}</p>
+                                )}
                                 <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
                                     <span className={blog.isPublished ? "text-emerald-600 font-medium" : "text-amber-600 font-medium"}>
                                         {blog.isPublished ? 'Published' : 'Draft'}
@@ -89,7 +92,7 @@ export default function DashboardPage() {
                                     <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <Link href={`/dashboard/edit/${blog.id}`}>
                                     <Button variant="secondary">Edit</Button>
                                 </Link>

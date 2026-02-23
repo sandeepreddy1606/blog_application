@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto, UpdateBlogDto } from './dto/blog.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @Controller()
 export class BlogsController {
@@ -33,13 +35,23 @@ export class BlogsController {
     }
 
     // --- PUBLIC ROUTES ---
+    @Throttle({ default: { limit: 20, ttl: 60000 } })
+    @UseGuards(OptionalJwtAuthGuard)
     @Get('public/feed')
-    getFeed(@Query('page') page: string = '1', @Query('limit') limit: string = '10') {
-        return this.blogsService.getFeed(Number(page), Number(limit));
+    getFeed(
+        @Request() req,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
+    ) {
+        const viewerId = req.user?.id;
+        return this.blogsService.getFeed(page, limit, viewerId);
     }
 
+    @Throttle({ default: { limit: 20, ttl: 60000 } })
+    @UseGuards(OptionalJwtAuthGuard)
     @Get('public/blogs/:slug')
-    getBySlug(@Param('slug') slug: string) {
-        return this.blogsService.getBySlug(slug);
+    getBySlug(@Request() req, @Param('slug') slug: string) {
+        const viewerId = req.user?.id;
+        return this.blogsService.getBySlug(slug, viewerId);
     }
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
@@ -11,6 +12,7 @@ import { setToken } from '@/lib/auth';
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -22,7 +24,7 @@ export default function LoginPage() {
         try {
             const response = await api.post('/auth/login', { email, password });
             setToken(response.data.accessToken);
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to login');
         } finally {
@@ -54,16 +56,25 @@ export default function LoginPage() {
                         </div>
                         <div>
                             <label className="sr-only" htmlFor="password">Password</label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
+                                    required
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4 text-slate-400" /> : <Eye className="h-4 w-4 text-slate-400" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

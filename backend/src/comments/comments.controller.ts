@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,5 +16,11 @@ export class CommentsController {
     @Get(':id/comments')
     findAll(@Param('id') id: string) {
         return this.commentsService.findAllForBlog(id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id/comments/:commentId')
+    remove(@Request() req, @Param('id') id: string, @Param('commentId') commentId: string) {
+        return this.commentsService.remove(req.user.id, id, commentId);
     }
 }

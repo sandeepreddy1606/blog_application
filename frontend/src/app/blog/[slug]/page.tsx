@@ -7,7 +7,7 @@ import { LikeButton } from '@/components/LikeButton';
 import { CommentItem } from '@/components/CommentItem';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { getToken } from '@/lib/auth';
+import { getToken, getUserFromToken } from '@/lib/auth';
 
 export default function SingleBlogPage() {
     const params = useParams();
@@ -16,10 +16,13 @@ export default function SingleBlogPage() {
     const [blog, setBlog] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [currentUser, setCurrentUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [submittingComment, setSubmittingComment] = useState(false);
 
     useEffect(() => {
+        setCurrentUser(getUserFromToken());
+
         const fetchBlogAndComments = async () => {
             setLoading(true);
             try {
@@ -28,8 +31,10 @@ export default function SingleBlogPage() {
 
                 const commentsRes = await api.get(`/blogs/${blogRes.data.id}/comments`);
                 setComments(commentsRes.data);
-            } catch (err) {
-                console.error('Failed to load blog', err);
+            } catch (err: any) {
+                if (err?.response?.status !== 404) {
+                    console.error('Failed to load blog', err);
+                }
             } finally {
                 setLoading(false);
             }
@@ -56,13 +61,44 @@ export default function SingleBlogPage() {
         }
     };
 
+    const handleReplyToComment = async (parentId: string, replyContent: string) => {
+        if (!getToken()) {
+            alert('Please login to reply');
+            return;
+        }
+
+        try {
+            const res = await api.post(`/blogs/${blog.id}/comments`, { content: replyContent, parentId });
+            setComments(comments.map(c => {
+                if (c.id === parentId) {
+                    return { ...c, replies: [res.data, ...(c.replies || [])] };
+                }
+                return c;
+            }));
+        } catch (err) {
+            console.error('Failed to post reply', err);
+            alert('Could not post reply.');
+        }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        if (!confirm('Are you sure you want to delete this comment?')) return;
+        try {
+            await api.delete(`/blogs/${blog.id}/comments/${commentId}`);
+            setComments(comments.filter(c => c.id !== commentId));
+        } catch (err) {
+            console.error('Failed to delete comment', err);
+            alert('Could not delete comment.');
+        }
+    };
+
     if (loading) return <div className="container mx-auto px-4 py-16 max-w-3xl text-center text-slate-500 animate-pulse">Loading story...</div>;
     if (!blog) return <div className="container mx-auto px-4 py-16 max-w-3xl text-center">Blog not found.</div>;
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-3xl">
             <header className="mb-10 text-center">
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight break-words">
                     {blog.title}
                 </h1>
                 <div className="flex items-center justify-center gap-3 text-slate-600 mb-8 pb-8 border-b border-slate-200">
@@ -72,12 +108,12 @@ export default function SingleBlogPage() {
                 </div>
             </header>
 
-            <article className="prose prose-slate prose-lg max-w-none text-slate-800 whitespace-pre-wrap leading-relaxed mb-16 px-2">
+            <article className="prose prose-slate prose-lg max-w-none text-slate-800 whitespace-pre-wrap leading-relaxed mb-16 px-2 break-words">
                 {blog.content}
             </article>
 
             <div className="flex items-center gap-4 py-6 border-y border-slate-100 mb-12">
-                <LikeButton blogId={blog.id} initialLikeCount={blog._count.likes} />
+                <LikeButton blogId={blog.id} initialLikeCount={blog._count.likes} initialLikedStatus={blog.isLikedByViewer} />
             </div>
 
             <section className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100">
@@ -99,7 +135,13 @@ export default function SingleBlogPage() {
 
                 <div className="space-y-2">
                     {comments.map((comment) => (
-                        <CommentItem key={comment.id} comment={comment} />
+                        <CommentItem
+                            key={comment.id}
+                            comment={comment}
+                            canDelete={currentUser?.sub === blog.author.id}
+                            onDelete={handleDeleteComment}
+                            onReply={handleReplyToComment}
+                        />
                     ))}
                     {comments.length === 0 && (
                         <p className="text-center text-slate-500 py-8">No comments yet. Be the first to start the conversation!</p>

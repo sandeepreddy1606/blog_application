@@ -21,7 +21,7 @@ import { LoggerModule } from 'nestjs-pino';
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
-      limit: 10,
+      limit: 100,
     }]),
     PrismaModule,
     AuthModule,
@@ -30,10 +30,6 @@ import { LoggerModule } from 'nestjs-pino';
     CommentsModule
   ],
   providers: [
-    {
-      provide: APP_PIPE,
-      useClass: ValidationPipe,
-    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard
