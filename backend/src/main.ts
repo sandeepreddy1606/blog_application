@@ -11,7 +11,14 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: ['https://blog-application-five-sigma.vercel.app','http://localhost:3000'],
+    origin: (origin, callback) => {
+      // Allow localhost and any vercel preview/production domain
+      if (!origin || origin.startsWith('http://localhost') || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
