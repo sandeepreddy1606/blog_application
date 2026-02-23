@@ -11,7 +11,8 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: '*', // For development
+    origin: ['http://localhost:3000', 'https://blog-application-five-sigma.vercel.app'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
